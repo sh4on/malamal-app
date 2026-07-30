@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/cart_controller.dart';
 import 'widgets/cart_body_widget.dart';
+import 'widgets/cart_guest_widget.dart';
 import '../../../shared/common_widgets/loading_state_widget.dart';
 import '../../../shared/common_widgets/empty_state_widget.dart';
 import '../../../shared/common_widgets/error_state_widget.dart';
@@ -41,6 +42,17 @@ class CartScreen extends GetView<CartController> {
         onRefresh: controller.fetchCart,
         color: AppColors.primary,
         child: Obx(() {
+          // show guest prompt if user is not logged in — cart_guest_widget.dart
+          if (!controller.isLoggedIn.value) {
+            return const SingleChildScrollView(
+              physics: AlwaysScrollableScrollPhysics(),
+              child: SizedBox(
+                height: 500,
+                child: CartGuestWidget(),
+              ),
+            );
+          }
+
           final statusVal = controller.status.value;
 
           // loading state

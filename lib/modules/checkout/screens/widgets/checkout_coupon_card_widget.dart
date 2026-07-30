@@ -8,10 +8,7 @@ import 'checkout_input_field.dart';
 class CheckoutCouponCardWidget extends StatelessWidget {
   final CheckoutController controller;
 
-  const CheckoutCouponCardWidget({
-    super.key,
-    required this.controller,
-  });
+  const CheckoutCouponCardWidget({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -43,16 +40,16 @@ class CheckoutCouponCardWidget extends StatelessWidget {
                   ),
                 ),
                 SizedBox(width: 8.w),
-                ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.secondary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4.r),
-                    ),
-                  ),
-                  child: const Text('Apply'),
-                ),
+                // ElevatedButton(
+                //   onPressed: () {},
+                //   style: ElevatedButton.styleFrom(
+                //     backgroundColor: AppColors.secondary,
+                //     shape: RoundedRectangleBorder(
+                //       borderRadius: BorderRadius.circular(4.r),
+                //     ),
+                //   ),
+                //   child: const Text('Apply'),
+                // ),
               ],
             ),
           ],

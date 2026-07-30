@@ -17,7 +17,11 @@ class CartController extends GetxController {
   final RxMap<String, CartItemModel> _cartItemsMap = <String, CartItemModel>{}.obs;
 
   // page loading state (only for the cart screen initial fetch)
-  final Rx<RxStatus> status = Rx<RxStatus>(RxStatus.loading());
+  // start as empty so guest users never see the loading spinner
+  final Rx<RxStatus> status = Rx<RxStatus>(RxStatus.empty());
+
+  // public reactive login state — CartScreen observes this to show the guest prompt
+  final RxBool isLoggedIn = false.obs;
 
   // order summary reactive values
   final RxDouble subtotal = 0.0.obs;
@@ -36,10 +40,24 @@ class CartController extends GetxController {
     //      run before isLoggedIn = true. The ever() listener catches that.
     //   2. after login: isLoggedIn flips to true → cart loads automatically.
     if (Get.isRegistered<ProfileController>()) {
+      final ProfileController profileController = Get.find<ProfileController>();
+
+      // sync initial login state immediately so the screen shows the right view
+      isLoggedIn.value = profileController.isLoggedIn.value;
+
+      // listen to login state changes and keep isLoggedIn in sync
       ever(
-        Get.find<ProfileController>().isLoggedIn,
+        profileController.isLoggedIn,
         (bool loggedIn) {
-          if (loggedIn) fetchCart();
+          isLoggedIn.value = loggedIn;
+          if (loggedIn) {
+            fetchCart();
+          } else {
+            // user logged out — clear cart data and reset to guest state
+            _cartItemsMap.clear();
+            _updateFromMap();
+            status.value = RxStatus.empty();
+          }
         },
       );
     } else {
@@ -98,11 +116,14 @@ class CartController extends GetxController {
   /// fetch cart from api — called on init and manual refresh
   /// shows loading state only on the cart screen
   Future<void> fetchCart() async {
-    // skip api call if user is not authenticated
+    // skip api call if user is not authenticated — CartScreen shows guest prompt
     if (!_isLoggedIn()) {
+      isLoggedIn.value = false;
       status.value = RxStatus.empty();
       return;
     }
+
+    isLoggedIn.value = true;
 
     status.value = RxStatus.loading();
 
