@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:project_m/modules/checkout/screens/widgets/checkout_coupon_card_widget.dart';
 import '../controllers/checkout_controller.dart';
 import 'widgets/checkout_billing_card_widget.dart';
 import 'widgets/checkout_payment_card_widget.dart';
@@ -41,8 +42,8 @@ class CheckoutScreen extends GetView<CheckoutController> {
                 SizedBox(height: 16.h),
 
                 // coupon code card — checkout_coupon_card_widget.dart
-                // CheckoutCouponCardWidget(controller: controller),
-                // SizedBox(height: 16.h),
+                CheckoutCouponCardWidget(controller: controller),
+                SizedBox(height: 16.h),
 
                 // payment method card — checkout_payment_card_widget.dart
                 CheckoutPaymentCardWidget(controller: controller),
