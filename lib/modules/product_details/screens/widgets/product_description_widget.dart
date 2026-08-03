@@ -41,10 +41,45 @@ class ProductDescriptionWidget extends StatelessWidget {
     );
   }
 
+  /// clean html content to remove redundant blank lines, empty paragraphs, and multiple breaks
+  String _cleanHtml(String html) {
+    if (html.isEmpty) return html;
+
+    // replace empty/whitespace paragraph tags with empty string
+    String cleaned = html.replaceAll(
+      RegExp(r'<p>\s*(?:&nbsp;|<br\s*\/?>|\s)*\s*</p>', caseSensitive: false),
+      '',
+    );
+
+    // replace multiple consecutive <br> tags with a single <br/>
+    cleaned = cleaned.replaceAll(
+      RegExp(r'(?:<br\s*\/?>\s*){2,}', caseSensitive: false),
+      '<br/>',
+    );
+
+    // trim leading and trailing spaces/newlines
+    return cleaned.trim();
+  }
+
   /// build the html rendered content widget with local stylesheets
   Widget _buildHtmlContent() {
+    final String cleanedHtml = _cleanHtml(descriptionHtml);
+
     return Html(
-      data: descriptionHtml,
+      data: cleanedHtml,
+      extensions: [
+        // custom extension to render <hr> tag as a slim divider
+        TagExtension(
+          tagsToExtend: const {'hr'},
+          builder: (extensionContext) {
+            return const Divider(
+              height: 1.0,
+              thickness: 1.0,
+              color: AppColors.divider,
+            );
+          },
+        ),
+      ],
       style: {
         // base body styling
         'body': Style(
