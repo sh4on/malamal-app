@@ -44,6 +44,7 @@ dependencies:
   shared_preferences: ^2.5.5
   upgrader: ^13.6.0
   webview_flutter: ^4.10.0
+  youtube_player_flutter: ^10.0.1
 
 dev_dependencies:
   flutter_test:

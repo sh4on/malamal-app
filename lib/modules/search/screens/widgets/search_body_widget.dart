@@ -28,49 +28,49 @@ class SearchBodyWidget extends StatelessWidget {
 
       if (isInitialState) {
         // render beautifully centered search input and graphics
-        return Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: AppDimensions.spaceXL.w),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // centered graphic container with primary colored search icon
-                Container(
-                  padding: EdgeInsets.all(AppDimensions.spaceXL.w),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.primary.withOpacity(0.08),
-                  ),
-                  child: Icon(
-                    Icons.search_outlined,
-                    size: 72.w,
-                    color: AppColors.primary,
-                  ),
+        return SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: AppDimensions.spaceXL.w),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(height: context.height * 0.1),
+
+              // centered graphic container with primary colored search icon
+              Container(
+                padding: EdgeInsets.all(AppDimensions.spaceXL.w),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primary.withValues(alpha: 0.08),
                 ),
-                SizedBox(height: AppDimensions.spaceXXL.h),
-                const Text(
-                  'Search Malamal Products',
-                  style: TextStyle(
-                    fontSize: AppDimensions.fontXL,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.secondary,
-                  ),
-                  textAlign: TextAlign.center,
+                child: Icon(
+                  Icons.search_outlined,
+                  size: 72.w,
+                  color: AppColors.primary,
                 ),
-                SizedBox(height: AppDimensions.spaceSM.h),
-                const Text(
-                  'Find tools, materials, and hardware equipment instantly.',
-                  style: TextStyle(
-                    fontSize: AppDimensions.fontMD,
-                    color: AppColors.grey,
-                  ),
-                  textAlign: TextAlign.center,
+              ),
+              SizedBox(height: AppDimensions.spaceXXL.h),
+              const Text(
+                'Search Malamal Products',
+                style: TextStyle(
+                  fontSize: AppDimensions.fontXL,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.secondary,
                 ),
-                SizedBox(height: AppDimensions.spaceXXL.h),
-                // search text field and button row
-                SearchInputWidget(controller: controller),
-              ],
-            ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: AppDimensions.spaceSM.h),
+              const Text(
+                'Find tools, materials, and hardware equipment instantly.',
+                style: TextStyle(
+                  fontSize: AppDimensions.fontMD,
+                  color: AppColors.grey,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: AppDimensions.spaceXXL.h),
+              // search text field and button row
+              SearchInputWidget(controller: controller),
+            ],
           ),
         );
       }

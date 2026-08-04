@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../controllers/product_details_controller.dart';
@@ -56,6 +56,7 @@ class ProductImageCarouselWidget extends StatelessWidget {
                       ? Stack(
                           fit: StackFit.expand,
                           children: [
+                            // high quality youtube thumbnail
                             CachedNetworkImage(
                               imageUrl:
                                   'https://img.youtube.com/vi/$youtubeVideoId/hqdefault.jpg',
@@ -77,58 +78,11 @@ class ProductImageCarouselWidget extends StatelessWidget {
                                     ),
                                   ),
                             ),
+
+                            // play button overlay with circular semi-transparent container
                             Center(
                               child: InkWell(
-                                onTap: () async {
-                                  // 3-tier fallback for maximum device compatibility
-                                  // (same pattern used for WhatsApp to handle OEM restrictions)
-
-                                  // tier 1: vnd.youtube deep link — opens directly in the
-                                  // YouTube app, bypasses browser on all android OEMs
-                                  // (Vivo Funtouch OS, MIUI, Samsung OneUI, etc.)
-                                  final Uri youtubeAppUri = Uri.parse(
-                                    'vnd.youtube:$youtubeVideoId',
-                                  );
-
-                                  // tier 2: https://youtu.be short link with external app mode
-                                  final Uri youtubeShortUri = Uri.parse(
-                                    'https://youtu.be/$youtubeVideoId',
-                                  );
-
-                                  // tier 3: full youtube.com URL as last resort
-                                  final Uri youtubeWebUri = Uri.parse(
-                                    'https://www.youtube.com/watch?v=$youtubeVideoId',
-                                  );
-
-                                  // try youtube app deep link first
-                                  try {
-                                    final bool canDirect = await canLaunchUrl(youtubeAppUri);
-                                    if (canDirect) {
-                                      await launchUrl(
-                                        youtubeAppUri,
-                                        mode: LaunchMode.externalApplication,
-                                      );
-                                      return;
-                                    }
-                                  } catch (_) {}
-
-                                  // fallback to youtu.be short url
-                                  try {
-                                    final bool launched = await launchUrl(
-                                      youtubeShortUri,
-                                      mode: LaunchMode.externalApplication,
-                                    );
-                                    if (launched) return;
-                                  } catch (_) {}
-
-                                  // last resort: full youtube url with platform default handler
-                                  try {
-                                    await launchUrl(
-                                      youtubeWebUri,
-                                      mode: LaunchMode.platformDefault,
-                                    );
-                                  } catch (_) {}
-                                },
+                                onTap: () => _showVideoPopup(context, youtubeVideoId!),
                                 child: Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
@@ -257,5 +211,61 @@ class ProductImageCarouselWidget extends StatelessWidget {
           ),
       ],
     );
+  }
+
+  /// show a dialog containing the youtube player with custom styles
+  void _showVideoPopup(BuildContext context, String videoId) {
+    // create the controller locally for the popup dialog lifecycle so it automatically
+    // disposes when the popup is dismissed to prevent memory leaks.
+    final YoutubePlayerController youtubeController = YoutubePlayerController.fromVideoId(
+      videoId: videoId,
+      autoPlay: true,
+      params: const YoutubePlayerParams(
+        showFullscreenButton: false,
+        showControls: true,
+        mute: false,
+        showVideoAnnotations: false,
+      ),
+    );
+
+    // display the custom dialog holding the video player
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.symmetric(horizontal: AppDimensions.spaceLG.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // close button positioned above the video card for clear dismissal option
+            Align(
+              alignment: Alignment.centerRight,
+              child: IconButton(
+                icon: const Icon(
+                  Icons.close_rounded,
+                  color: AppColors.white,
+                  size: AppDimensions.iconXL,
+                ),
+                onPressed: () {
+                  Get.back();
+                },
+              ),
+            ),
+            SizedBox(height: AppDimensions.spaceSM.h),
+
+            // rounded container holding the youtube player
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+              child: YoutubePlayer(
+                controller: youtubeController,
+                aspectRatio: 16 / 9,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).then((_) {
+      // dispose player controller to release resource memory once popup goes away
+      youtubeController.close();
+    });
   }
 }
