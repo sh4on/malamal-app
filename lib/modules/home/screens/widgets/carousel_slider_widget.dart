@@ -74,10 +74,33 @@ class _CarouselSliderWidgetState extends State<CarouselSliderWidget> {
               final slide = widget.slides[index];
               return GestureDetector(
                 onTap: () {
-                  Get.toNamed(
-                    AppRoutes.productDetails,
-                    arguments: {"slug": slide.clickUrl.substring(9)},
-                  );
+                  // if the slide promotional link contains a category slug (starts with 'category'), 
+                  // we direct the user to the category page with a formatted name to browse 
+                  // items, instead of the product details page.
+                  if (slide.clickUrl.startsWith('category')) {
+                    final String slug = slide.clickUrl.substring(9);
+                    // format category name to title case (e.g. commercial-packaging-equipment -> Commercial Packaging Equipment)
+                    final String name = slug
+                        .split('-')
+                        .map((word) => word.isNotEmpty
+                            ? '${word[0].toUpperCase()}${word.substring(1)}'
+                            : '')
+                        .join(' ');
+
+                    Get.toNamed(
+                      AppRoutes.subCategoryProducts,
+                      arguments: {
+                        'slug': slug,
+                        'name': name,
+                        'isMainCategory': true,
+                      },
+                    );
+                  } else {
+                    Get.toNamed(
+                      AppRoutes.productDetails,
+                      arguments: {'slug': slide.clickUrl.substring(9)},
+                    );
+                  }
                 },
                 child: Padding(
                   padding: EdgeInsets.symmetric(

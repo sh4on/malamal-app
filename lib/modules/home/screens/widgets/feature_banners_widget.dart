@@ -26,10 +26,39 @@ class FeatureBannersWidget extends StatelessWidget {
         itemBuilder: (context, index) {
           final feature = features[index];
           return GestureDetector(
-            onTap: () => Get.toNamed(
-              AppRoutes.productDetails,
-              arguments: {"slug": feature.clickUrl.substring(9)},
-            ),
+            onTap: () {
+              debugPrint('feature.clickUrl: ${feature.clickUrl}');
+
+              // if the promotional link contains a category slug (starts with 'category'),
+              // we intercept and direct the user to the category page with a formatted name to browse
+              // items of that category, instead of opening the product details page.
+              if (feature.clickUrl.startsWith('category')) {
+                final String slug = feature.clickUrl.substring(9);
+                // format category name to title case (e.g. commercial-packaging-equipment -> Commercial Packaging Equipment)
+                final String name = slug
+                    .split('-')
+                    .map(
+                      (word) => word.isNotEmpty
+                          ? '${word[0].toUpperCase()}${word.substring(1)}'
+                          : '',
+                    )
+                    .join(' ');
+
+                Get.toNamed(
+                  AppRoutes.subCategoryProducts,
+                  arguments: {
+                    'slug': slug,
+                    'name': name,
+                    'isMainCategory': true,
+                  },
+                );
+              } else {
+                Get.toNamed(
+                  AppRoutes.productDetails,
+                  arguments: {'slug': feature.clickUrl.substring(9)},
+                );
+              }
+            },
             child: Container(
               // each feature tile is 40% of screen width with right margin
               width: MediaQuery.of(context).size.width * 0.55,
