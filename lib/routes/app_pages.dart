@@ -14,6 +14,8 @@ import '../modules/search/bindings/search_binding.dart';
 import '../modules/profile/screens/account_information_screen.dart';
 import '../modules/profile/screens/change_password_screen.dart';
 import '../modules/profile/controllers/change_password_controller.dart';
+import '../modules/orders/bindings/order_details_binding.dart';
+import '../modules/orders/screens/order_details_screen.dart';
 import 'app_routes.dart';
 
 /// app routes list definitions and bindings
@@ -30,6 +32,11 @@ class AppPages {
     ),
     GetPage(name: AppRoutes.auth, page: () => const AuthScreen()),
     GetPage(name: AppRoutes.checkout, page: () => const CheckoutScreen()),
+    GetPage(
+      name: AppRoutes.orderDetails,
+      page: () => const OrderDetailsScreen(),
+      binding: OrderDetailsBinding(),
+    ),
     GetPage(
       name: AppRoutes.productDetails,
       page: () => const ProductDetailsScreen(),

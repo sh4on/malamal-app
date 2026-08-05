@@ -86,6 +86,8 @@ class OrderModel {
   final String? reference;
   final String? invoiceId;
   final double amount;
+  final double? subtotal;
+  final double? shippingCharge;
   final String status;
   final List<OrderItem> items;
   final OrderCustomer customer;
@@ -97,6 +99,8 @@ class OrderModel {
     this.reference,
     this.invoiceId,
     required this.amount,
+    this.subtotal,
+    this.shippingCharge,
     required this.status,
     required this.items,
     required this.customer,
@@ -113,12 +117,15 @@ class OrderModel {
 
     return OrderModel(
       id: json['id'] ?? json['_id'] ?? '',
-      reference: json['reference'],
+      reference: json['reference'] ?? json['orderId'],
       invoiceId: json['invoice_id'] ?? json['invoiceId'],
       amount: (json['amount'] as num?)?.toDouble() ??
           (json['total'] as num?)?.toDouble() ??
           (json['totalAmount'] as num?)?.toDouble() ??
           0.0,
+      subtotal: (json['subtotal'] as num?)?.toDouble(),
+      shippingCharge: (json['shippingCharge'] as num?)?.toDouble() ??
+          (json['delivery'] as num?)?.toDouble(),
       status: json['status'] ?? 'PENDING',
       items: itemsList,
       customer: OrderCustomer.fromJson(json['customer'] ?? {}),
@@ -134,6 +141,8 @@ class OrderModel {
       'reference': reference,
       'invoice_id': invoiceId,
       'amount': amount,
+      'subtotal': subtotal,
+      'shippingCharge': shippingCharge,
       'status': status,
       'items': items.map((e) => e.toJson()).toList(),
       'customer': customer.toJson(),

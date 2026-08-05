@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../controllers/checkout_controller.dart';
+import 'checkout_dropdown_field.dart';
 import 'checkout_input_field.dart';
+
 
 /// billing details card section with customer name, phone, email, address, city and notes
 class CheckoutBillingCardWidget extends StatelessWidget {
@@ -72,10 +75,11 @@ class CheckoutBillingCardWidget extends StatelessWidget {
             ),
             SizedBox(height: 12.h),
 
-            // city field
-            CheckoutInputField(
+            // city field dropdown to select from bangladesh districts
+            CheckoutDropdownField(
               label: 'City / District *',
               controller: controller.cityController,
+              items: AppConstants.bangladeshDistricts,
               validator: (val) =>
                   val == null || val.isEmpty ? 'City is required' : null,
             ),

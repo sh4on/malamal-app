@@ -14,4 +14,5 @@ abstract class AppRoutes {
   // profile and user settings sub screens
   static const String accountInfo = '/accountInfo';
   static const String changePassword = '/changePassword';
+  static const String orderDetails = '/orderDetails';
 }

@@ -1,9 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../data/models/order_model.dart';
+import '../../../../routes/app_routes.dart';
 
 /// custom card widget representing a single order summary and its products
 class OrderCardWidget extends StatelessWidget {
@@ -13,8 +15,16 @@ class OrderCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: AppColors.white,
+    return GestureDetector(
+      onTap: () {
+        // navigate to order details page with orderId argument
+        Get.toNamed(
+          AppRoutes.orderDetails,
+          arguments: order.reference ?? order.id,
+        );
+      },
+      child: Card(
+        color: AppColors.white,
       elevation: 0.5,
       margin: EdgeInsets.only(
         left: AppDimensions.spaceLG.w,
@@ -104,8 +114,9 @@ class OrderCardWidget extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   /// helper method to draw status badge colored dynamically based on status name
   Widget _buildStatusChip(String status) {

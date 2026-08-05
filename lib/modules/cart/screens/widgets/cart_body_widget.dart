@@ -94,6 +94,21 @@ class _CartOrderSummaryWidget extends GetView<CartController> {
                   ),
                 ],
               ),
+              // show shipping calculation details below the delivery charge row
+              if (controller.cartItems.isNotEmpty) ...[
+                SizedBox(height: 4.h),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    'Weight: ${controller.calculateTotalWeight().toStringAsFixed(2)} kg (${controller.getShippingCalculationDetails()})',
+                    style: const TextStyle(
+                      color: AppColors.grey,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ],
               const Divider(height: 20),
               // total price row
               Row(

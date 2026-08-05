@@ -28,13 +28,16 @@ class CheckoutController extends GetxController {
   // loading state driven via isLoading — disables place-order button while request runs
   final RxBool isLoading = false.obs;
 
-  late final CartController _cartController;
+  final CartController _cartController = Get.find<CartController>();
   final NetworkService _networkService = NetworkService.instance;
 
   @override
   void onInit() {
     super.onInit();
-    _cartController = Get.find<CartController>();
+    // reset selected city to default outside Dhaka on entering checkout after the current frame finishes building
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _cartController.updateShippingCost('Outside Dhaka');
+    });
   }
 
   // ─── checkout submission ─────────────────────────────────────────────────────
@@ -248,6 +251,12 @@ class CheckoutController extends GetxController {
     cityController.dispose();
     noteController.dispose();
     couponController.dispose();
+    // revert selected city back to Outside Dhaka when leaving checkout after the current frame finishes building
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (Get.isRegistered<CartController>()) {
+        Get.find<CartController>().updateShippingCost('Outside Dhaka');
+      }
+    });
     super.onClose();
   }
 }

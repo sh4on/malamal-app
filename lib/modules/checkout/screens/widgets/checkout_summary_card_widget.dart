@@ -25,6 +25,71 @@ class CheckoutSummaryCardWidget extends StatelessWidget {
         padding: EdgeInsets.all(16.w),
         child: Column(
           children: [
+            // subtotal row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Subtotal',
+                  style: TextStyle(color: AppColors.greyDark, fontSize: 14),
+                ),
+                Obx(
+                  () => Text(
+                    '৳${cartController.subtotal.value.toStringAsFixed(0)}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+
+            // delivery charge row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Delivery Charge',
+                  style: TextStyle(color: AppColors.greyDark, fontSize: 14),
+                ),
+                Obx(
+                  () => Text(
+                    '৳${cartController.shipping.value.toStringAsFixed(0)}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            // show shipping calculation details below the delivery charge row
+            Obx(
+              () {
+                if (cartController.cartItems.isEmpty) return const SizedBox.shrink();
+                return Column(
+                  children: [
+                    SizedBox(height: 4.h),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        'Weight: ${cartController.calculateTotalWeight().toStringAsFixed(2)} kg (${cartController.getShippingCalculationDetails()})',
+                        style: const TextStyle(
+                          color: AppColors.grey,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            const Divider(height: 20),
+
             // order total price row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

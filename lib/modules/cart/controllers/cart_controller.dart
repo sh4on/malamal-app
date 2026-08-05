@@ -91,18 +91,83 @@ class CartController extends GetxController {
     Get.toNamed('/auth');
   }
 
-  /// recalculate subtotal and total from current cart items map
+  // active shipping location defaulting to outside dhaka
+  final RxString selectedCity = 'Outside Dhaka'.obs;
+
+  /// calculate the total weight of all items in the cart
+  double calculateTotalWeight() {
+    double totalWeight = 0.0;
+    for (final item in _cartItemsMap.values) {
+      totalWeight += item.quantity * (item.productSnapshot?.weightKg ?? 0.0);
+    }
+    return totalWeight;
+  }
+
+  /// get detailed text explanation of shipping charge calculation
+  String getShippingCalculationDetails() {
+    final double totalWeight = calculateTotalWeight();
+    final int ceilWeight = totalWeight.ceil();
+    final int effectiveWeight = ceilWeight < 1 ? 1 : ceilWeight;
+    final bool isDhaka = selectedCity.value.trim().toLowerCase() == 'dhaka';
+
+    final String locationText = isDhaka ? 'Inside Dhaka' : 'Outside Dhaka';
+
+    if (isDhaka) {
+      if (effectiveWeight == 1) {
+        return '$locationText: 1 kg = ৳80';
+      } else {
+        final int additionalKg = effectiveWeight - 1;
+        final int additionalCost = additionalKg * 20;
+        return '$locationText: 1 kg (৳80) + $additionalKg kg additional (৳$additionalCost) = ৳${80 + additionalCost}';
+      }
+    } else {
+      if (effectiveWeight == 1) {
+        return '$locationText: 1 kg = ৳130';
+      } else {
+        final int additionalKg = effectiveWeight - 1;
+        final int additionalCost = additionalKg * 30;
+        return '$locationText: 1 kg (৳130) + $additionalKg kg additional (৳$additionalCost) = ৳${130 + additionalCost}';
+      }
+    }
+  }
+
+  /// update shipping charge based on selected city and total weight
+  void updateShippingCost(String city) {
+    selectedCity.value = city.isNotEmpty ? city : 'Outside Dhaka';
+    _recalculate();
+  }
+
+  /// recalculate subtotal, shipping cost, and grand total based on weight and location
   void _recalculate() {
     double sum = 0.0;
     for (final item in _cartItemsMap.values) {
       // prefer priceSnapshot (locked price), fallback to product.price
-      final price = item.priceSnapshot > 0
+      final double price = item.priceSnapshot > 0
           ? item.priceSnapshot
           : item.product.price;
       sum += price * item.quantity;
     }
     subtotal.value = sum;
-    total.value = sum > 0 ? sum + shipping.value : 0.0;
+
+    if (sum == 0.0) {
+      shipping.value = 0.0;
+      total.value = 0.0;
+      return;
+    }
+
+    final double totalWeight = calculateTotalWeight();
+    final int ceilWeight = totalWeight.ceil();
+    final int effectiveWeight = ceilWeight < 1 ? 1 : ceilWeight;
+
+    // determine shipping rate by location (inside dhaka vs outside dhaka)
+    final bool isDhaka = selectedCity.value.trim().toLowerCase() == 'dhaka';
+    if (isDhaka) {
+      shipping.value = 80.0 + (effectiveWeight - 1) * 20.0;
+    } else {
+      shipping.value = 130.0 + (effectiveWeight - 1) * 30.0;
+    }
+
+    total.value = sum + shipping.value;
   }
 
   /// sync the reactive list from the internal map and recalculate totals
@@ -147,16 +212,8 @@ class CartController extends GetxController {
           _cartItemsMap[item.product.id] = item;
         }
 
-        // use server-calculated subtotal if available
-        final double serverSubtotal =
-            (cartData['subtotal'] as num?)?.toDouble() ?? 0.0;
-        if (serverSubtotal > 0) {
-          subtotal.value = serverSubtotal;
-          total.value = serverSubtotal + shipping.value;
-          cartItems.assignAll(_cartItemsMap.values.toList());
-        } else {
-          _updateFromMap();
-        }
+        // recalculate totals and update items list dynamically
+        _updateFromMap();
 
         status.value =
             cartItems.isEmpty ? RxStatus.empty() : RxStatus.success();
