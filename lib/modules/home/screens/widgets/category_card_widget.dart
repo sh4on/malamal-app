@@ -7,9 +7,15 @@ import '../../../../data/models/home_model.dart';
 /// category chip card — circular icon with label below for shop by category section
 class CategoryCardWidget extends StatelessWidget {
   final CategoryModel category;
+  final IconData? icon;
   final VoidCallback? onTap;
 
-  const CategoryCardWidget({super.key, required this.category, this.onTap});
+  const CategoryCardWidget({
+    super.key,
+    required this.category,
+    this.icon,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +41,7 @@ class CategoryCardWidget extends StatelessWidget {
               ),
               child: Center(
                 child: Icon(
-                  _getCategoryIcon(category.slug),
+                  icon ?? getRawCategoryIcon(category.slug),
                   color: AppColors.primary,
                   size: AppDimensions.iconLG,
                 ),
@@ -62,7 +68,7 @@ class CategoryCardWidget extends StatelessWidget {
   }
 
   /// map category slug to a relevant material icon for display
-  IconData _getCategoryIcon(String slug) {
+  static IconData getRawCategoryIcon(String slug) {
     // map known category slugs to matching icons
     if (slug.contains('fan') || slug.contains('cooler')) return Icons.air;
     if (slug.contains('cleaning') || slug.contains('vacuum')) {
@@ -100,6 +106,29 @@ class CategoryCardWidget extends StatelessWidget {
     }
     if (slug.contains('storage')) return Icons.warehouse;
     // fallback default icon
+    return Icons.category_outlined;
+  }
+
+  /// get alternative icon that is different from both the current and the previous icon to prevent duplicates
+  static IconData getAlternateIcon(IconData current, IconData previous, int index) {
+    final List<IconData> alternatePool = [
+      Icons.category_outlined,
+      Icons.build_outlined,
+      Icons.construction_outlined,
+      Icons.handyman_outlined,
+      Icons.hardware_outlined,
+      Icons.grid_view_outlined,
+      Icons.settings_outlined,
+    ];
+
+    // search the alternate pool for a candidate that is different from both the current 
+    // and the previous icon, offset by index to ensure a diverse distribution.
+    for (int offset = 0; offset < alternatePool.length; offset++) {
+      final candidate = alternatePool[(index + offset) % alternatePool.length];
+      if (candidate != previous && candidate != current) {
+        return candidate;
+      }
+    }
     return Icons.category_outlined;
   }
 }

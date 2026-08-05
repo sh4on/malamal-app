@@ -94,27 +94,45 @@ class _HomeCategoryListWidget extends GetView<HomeController> {
     return SizedBox(
       height: AppDimensions.categoryCardHeight.h,
       child: Obx(
-        () => ListView.builder(
-          scrollDirection: Axis.horizontal,
-          padding: EdgeInsets.only(left: AppDimensions.spaceLG.w),
-          itemCount: controller.categories.length,
-          itemBuilder: (context, index) {
-            final CategoryModel category = controller.categories[index];
-            return CategoryCardWidget(
-              category: category,
-              onTap: () {
-                Get.toNamed(
-                  AppRoutes.subCategoryProducts,
-                  arguments: {
-                    'slug': category.slug,
-                    'name': category.name,
-                    'isMainCategory': true,
-                  },
-                );
-              },
-            );
-          },
-        ),
+        () {
+          final categories = controller.categories;
+
+          // pre-calculate the list of displayed icons to avoid consecutive duplicate icons 
+          // being shown in the horizontal list view, ensuring a diverse and visually appealing UI.
+          final List<IconData> displayedIcons = [];
+          for (int i = 0; i < categories.length; i++) {
+            final rawIcon = CategoryCardWidget.getRawCategoryIcon(categories[i].slug);
+            IconData icon = rawIcon;
+            if (i > 0 && icon == displayedIcons[i - 1]) {
+              // choose alternate icon if consecutive duplicate is detected
+              icon = CategoryCardWidget.getAlternateIcon(rawIcon, displayedIcons[i - 1], i);
+            }
+            displayedIcons.add(icon);
+          }
+
+          return ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.only(left: AppDimensions.spaceLG.w),
+            itemCount: categories.length,
+            itemBuilder: (context, index) {
+              final CategoryModel category = categories[index];
+              return CategoryCardWidget(
+                category: category,
+                icon: displayedIcons[index],
+                onTap: () {
+                  Get.toNamed(
+                    AppRoutes.subCategoryProducts,
+                    arguments: {
+                      'slug': category.slug,
+                      'name': category.name,
+                      'isMainCategory': true,
+                    },
+                  );
+                },
+              );
+            },
+          );
+        },
       ),
     );
   }
