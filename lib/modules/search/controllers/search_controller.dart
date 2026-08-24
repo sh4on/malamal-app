@@ -39,7 +39,7 @@ class SearchController extends GetxController with PaginationMixin {
   @override
   void onInit() {
     super.onInit();
-    
+
     initPagination(() {
       if (hasNextPage && !isLock && !status.value.isLoadingMore) {
         _fetchSearchResults(isLoadMore: true);
@@ -89,46 +89,67 @@ class SearchController extends GetxController with PaginationMixin {
       results.clear();
       hasNextPage = true;
     }
-    
+
     isLock = true;
-    
-    final endpoint = 'https://api.malamal.com.bd/api/v1/product/all?limit=$limit&page=$currentPage&searchTerm=${currentQuery.value}';
-    final networkResult = await _networkService.get(endpoint);
 
-    if (networkResult.isSuccess) {
-      final List data = networkResult.data?['data'] ?? [];
-      final int totalPages = networkResult.data?['meta']?['totalPages'] ?? 1;
-      final int totalResults = networkResult.data?['meta']?['total'] ?? 0;
-      
-      final List<ProductModel> newProducts = data
-          .map((e) => ProductModel.fromJson(e as Map<String, dynamic>))
-          .toList();
+    // wrap in try/finally so isLock always resets even on unexpected parse errors
+    try {
+      final endpoint =
+          'https://api.malamal.com.bd/api/v1/product/search?limit=$limit&page=$currentPage&query=${currentQuery.value}';
+      final networkResult = await _networkService.get(endpoint);
 
-      if (isLoadMore) {
-        results.addAll(newProducts);
+      if (networkResult.isSuccess) {
+        // api response shape: { data: { products: [...], meta: { totalPages, total } } }
+        final Map<String, dynamic> dataWrapper =
+            (networkResult.data?['data'] as Map<String, dynamic>?) ?? {};
+
+        final List productList = (dataWrapper['products'] as List?) ?? [];
+        final Map<String, dynamic> meta =
+            (dataWrapper['meta'] as Map<String, dynamic>?) ?? {};
+
+        final int totalPages = (meta['totalPages'] as num?)?.toInt() ?? 1;
+        final int totalResults = (meta['total'] as num?)?.toInt() ?? 0;
+
+        final List<ProductModel> newProducts = productList
+            .map((e) => ProductModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+
+        if (isLoadMore) {
+          results.addAll(newProducts);
+        } else {
+          results.assignAll(newProducts);
+        }
+
+        hasNextPage = currentPage < totalPages;
+
+        if (results.isEmpty) {
+          status.value = RxStatus.empty();
+        } else {
+          status.value = RxStatus.success();
+        }
+
+        statsText.value =
+            "Showing all $totalResults results for '${currentQuery.value}'";
       } else {
-        results.assignAll(newProducts);
+        status.value = RxStatus.error(networkResult.message);
+        if (isLoadMore) {
+          // revert page increment on load-more failure
+          currentPage--;
+        }
       }
-      
-      hasNextPage = currentPage < totalPages;
-
-      if (results.isEmpty) {
-        status.value = RxStatus.empty();
-      } else {
-        status.value = RxStatus.success();
-      }
-      
-      statsText.value = "Showing all $totalResults results for '${currentQuery.value}'";
-    } else {
-      status.value = RxStatus.error(networkResult.message);
+    } catch (e) {
+      // catches unexpected json parse errors and keeps ui in a recoverable error state
+      debugPrint('🚨 [SearchController] Parse error: $e');
+      status.value = RxStatus.error('Unexpected error. Please try again.');
       if (isLoadMore) {
         currentPage--;
       }
+    } finally {
+      // always release the lock regardless of success or failure
+      isLock = false;
     }
-    
-    isLock = false;
   }
-  
+
   void retry() {
     if (currentQuery.value.isNotEmpty) {
       _fetchSearchResults();
@@ -143,4 +164,3 @@ class SearchController extends GetxController with PaginationMixin {
     super.onClose();
   }
 }
-
