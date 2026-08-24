@@ -74,31 +74,58 @@ class _CarouselSliderWidgetState extends State<CarouselSliderWidget> {
               final slide = widget.slides[index];
               return GestureDetector(
                 onTap: () {
-                  // if the slide promotional link contains a category slug (starts with 'category'), 
-                  // we direct the user to the category page with a formatted name to browse 
-                  // items, instead of the product details page.
-                  if (slide.clickUrl.startsWith('category')) {
-                    final String slug = slide.clickUrl.substring(9);
-                    // format category name to title case (e.g. commercial-packaging-equipment -> Commercial Packaging Equipment)
-                    final String name = slug
+                  // parse the clickUrl as a URI to safely extract path segments
+                  // this handles both full URLs (https://malamal.com.bd/product/...)
+                  // and relative paths (product/...) without fragile substring offsets
+                  final Uri uri = Uri.parse(slide.clickUrl);
+                  final List<String> segments = uri.pathSegments;
+
+                  if (segments.isEmpty) return;
+
+                  // first path segment indicates the type: 'category' or 'product'
+                  final String type = segments.first;
+
+                  if (type == 'category') {
+                    // url shape: /category/{parentSlug}/{subSlug}
+                    // target slug is always the last segment
+                    final String targetSlug = segments.last;
+
+                    // isMain = true only when there is no sub-category segment
+                    // e.g. /category/welding-cutting → isMain (2 segments incl. 'category')
+                    // e.g. /category/welding-cutting/welding-machine → sub-category (3 segments)
+                    final bool isMain = segments.length == 2;
+
+                    // format slug to title case for the screen title
+                    final String name = targetSlug
                         .split('-')
-                        .map((word) => word.isNotEmpty
-                            ? '${word[0].toUpperCase()}${word.substring(1)}'
-                            : '')
+                        .map(
+                          (word) => word.isNotEmpty
+                              ? '${word[0].toUpperCase()}${word.substring(1)}'
+                              : '',
+                        )
                         .join(' ');
+
+                    debugPrint(
+                      '[Carousel] category slug: $targetSlug (isMain: $isMain)',
+                    );
 
                     Get.toNamed(
                       AppRoutes.subCategoryProducts,
                       arguments: {
-                        'slug': slug,
+                        'slug': targetSlug,
                         'name': name,
-                        'isMainCategory': true,
+                        'isMainCategory': isMain,
                       },
                     );
                   } else {
+                    // product link: slug is always the last path segment
+                    final String productSlug = segments.last;
+
+                    debugPrint('[Carousel] product slug: $productSlug');
+
                     Get.toNamed(
                       AppRoutes.productDetails,
-                      arguments: {'slug': slide.clickUrl.substring(9)},
+                      arguments: {'slug': productSlug},
                     );
                   }
                 },
