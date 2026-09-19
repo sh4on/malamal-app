@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../../base/controllers/base_controller.dart';
 import '../../../core/services/network_service.dart';
+import '../../../core/services/checkout_preferences_service.dart';
 import '../screens/widgets/payment_webview_screen.dart';
 
 // portpos redirect success url — the webview detects fail/cancel via url substrings
@@ -30,6 +31,8 @@ class CheckoutController extends GetxController {
 
   final CartController _cartController = Get.find<CartController>();
   final NetworkService _networkService = NetworkService.instance;
+  final CheckoutPreferencesService _prefsService =
+      CheckoutPreferencesService.instance;
 
   @override
   void onInit() {
@@ -38,6 +41,49 @@ class CheckoutController extends GetxController {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _cartController.updateShippingCost('Outside Dhaka');
     });
+
+    // load previously saved billing details to auto-fill the form
+    _loadSavedBillingDetails();
+  }
+
+  // ─── auto-fill helpers ───────────────────────────────────────────────────────
+
+  /// reads persisted billing details from local storage and pre-populates
+  /// the form text controllers so returning users don't need to re-enter data
+  Future<void> _loadSavedBillingDetails() async {
+    final Map<String, String?> saved =
+        await _prefsService.loadBillingDetails();
+
+    // only populate fields that have a previously saved value
+    if (saved['name']?.isNotEmpty == true) {
+      nameController.text = saved['name']!;
+    }
+    if (saved['phone']?.isNotEmpty == true) {
+      phoneController.text = saved['phone']!;
+    }
+    if (saved['email']?.isNotEmpty == true) {
+      emailController.text = saved['email']!;
+    }
+    if (saved['address']?.isNotEmpty == true) {
+      addressController.text = saved['address']!;
+    }
+    if (saved['city']?.isNotEmpty == true) {
+      cityController.text = saved['city']!;
+      // update shipping cost to match the restored city selection
+      _cartController.updateShippingCost(saved['city']!);
+    }
+  }
+
+  /// persists the current billing form values so they can be restored
+  /// on the user's next checkout visit
+  Future<void> _saveBillingDetails() async {
+    await _prefsService.saveBillingDetails(
+      name: nameController.text.trim(),
+      phone: phoneController.text.trim(),
+      email: emailController.text.trim(),
+      address: addressController.text.trim(),
+      city: cityController.text.trim(),
+    );
   }
 
   // ─── checkout submission ─────────────────────────────────────────────────────
@@ -143,6 +189,9 @@ class CheckoutController extends GetxController {
       duration: const Duration(seconds: 4),
     );
 
+    // save billing details locally so the form auto-fills on next checkout
+    await _saveBillingDetails();
+
     // clear cart after a successful order
     _cartController.clearCartList();
 
@@ -185,6 +234,9 @@ class CheckoutController extends GetxController {
         colorText: Colors.white,
         duration: const Duration(seconds: 4),
       );
+
+      // save billing details locally so the form auto-fills on next checkout
+      await _saveBillingDetails();
 
       // clear cart since order is now confirmed
       _cartController.clearCartList();
